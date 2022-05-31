@@ -6,6 +6,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 from mapa import Mapa
+from analysis import Analysis as anls
 from selectpvs import SelectPvs
 from archiver import Archiver as arc
 
@@ -19,6 +20,14 @@ class ConcreteAnalytics(QMainWindow):
         self.searchButton.clicked.connect(self.search_pv)
         self.plotButton.clicked.connect(self.plot)
 
+        self.iniDatetime = None
+        self.endDatetime = None
+
+        # Save the last temperature average that was loaded
+        self.rangeDate_tempAvg = []
+        self.x_tempAvg = []
+        self.y_tempAvg = []
+
         # Menu Buttons
         self.menuSensors = Mapa()
         self.pb_menu_sensors.clicked.connect(self.open_sensors)
@@ -28,11 +37,29 @@ class ConcreteAnalytics(QMainWindow):
     def open_sensors(self):
         self.menuSensors.show()
 
-    def plot(self):
+    def plot(self, x: list = [], y: list = []):
         x = self.selectPvs.xData.copy()
         y = self.selectPvs.yData.copy()
         pvs = self.selectPvs.pvs.copy()
         units = self.selectPvs.units.copy()
+
+        if self.iniDatetime == None or self.endDatetime == None:
+            self.iniDatetime = self.form_iniDatetime.dateTime().toPyDateTime()
+            self.endDatetime = self.form_endDatetime.dateTime().toPyDateTime()
+
+        if self.cb_addTempAverage.isChecked():
+            if (self.x_tempAvg == [] or self.y_tempAvg == [] or self.rangeDate_tempAvg == []):
+                if self.rangeDate_tempAvg != [self.iniDatetime, self.endDatetime]:
+                    self.log_insertMsg("Generating temperature average, this might take a few minutes...")
+                    self.x_tempAvg, self.y_tempAvg = anls.temperatureAvg(self.iniDatetime, self.endDatetime)
+                    self.rangeDate_tempAvg = [self.iniDatetime, self.endDatetime]
+            unit_tempAvg = ["C" for _ in range(len(self.x_tempAvg))]
+            x.append(self.x_tempAvg)
+            y.append(self.y_tempAvg)
+            units.append(unit_tempAvg)
+            pvs.append("Concrete Temperature Average")
+        else:
+            self.log_insertMsg("Nothing to plot...")
 
         if (x != [] and y != [] and pvs != [] and units != []):
             self.matplotlibWidget.plot(x, y,labels=pvs, units=units, 
@@ -46,12 +73,12 @@ class ConcreteAnalytics(QMainWindow):
     def search_pv(self):
         pvName = self.pvName.text()
 
-        iniDatetime = self.iniDatetime.dateTime().toPyDateTime()
-        endDatetime = self.endDatetime.dateTime().toPyDateTime()
+        self.iniDatetime = self.form_iniDatetime.dateTime().toPyDateTime()
+        self.endDatetime = self.form_endDatetime.dateTime().toPyDateTime()
 
-        if pvName != "" and iniDatetime != endDatetime:
+        if pvName != "" and self.iniDatetime != self.endDatetime:
             pv = arc.get_concrete_pvName(pvName)
-            self.selectPvs.selectPvs(pv, iniDatetime, endDatetime, self.logBox)
+            self.selectPvs.selectPvs(pv, self.iniDatetime, self.endDatetime, self.logBox)
             self.selectPvs.show()
         else:
             self.log_insertMsg("Complete all the fields correctly...")

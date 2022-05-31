@@ -508,7 +508,7 @@
       <string>Initial datetime</string>
      </property>
     </widget>
-    <widget class="QDateTimeEdit" name="iniDatetime">
+    <widget class="QDateTimeEdit" name="form_iniDatetime">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -554,7 +554,7 @@
       <string>End datetime</string>
      </property>
     </widget>
-    <widget class="QDateTimeEdit" name="endDatetime">
+    <widget class="QDateTimeEdit" name="form_endDatetime">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -673,7 +673,7 @@
       <string>Data average</string>
      </property>
     </widget>
-    <widget class="QCheckBox" name="cb_addAverageTemp">
+    <widget class="QCheckBox" name="cb_addTempAverage">
      <property name="geometry">
       <rect>
        <x>20</x>
