@@ -87,4 +87,5 @@ class Archiver():
                     
 if __name__ == "__main__":
     from archiver import Archiver as arc
-    print(arc.get_concrete_pvName("TU-05S:SS-Concrete-3AN:Temp-Mon"))
+    pvs = arc.get_concrete_pvName("TU*Temp")
+    print(pvs)
