@@ -434,16 +434,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTextBrowser" name="logBox">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>680</y>
-      <width>241</width>
-      <height>81</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
@@ -600,7 +590,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>380</y>
+      <y>450</y>
       <width>241</width>
       <height>281</height>
      </rect>
@@ -774,6 +764,29 @@
       <string>Settings</string>
      </property>
     </widget>
+   </widget>
+   <widget class="QTextBrowser" name="logBox">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>380</y>
+      <width>241</width>
+      <height>61</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBarPlot">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>740</y>
+      <width>261</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>24</number>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

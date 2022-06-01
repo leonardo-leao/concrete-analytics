@@ -19,6 +19,8 @@ class ConcreteAnalytics(QMainWindow):
         self.addToolBar(NavigationToolbar(self.matplotlibWidget.canvas, self))
         self.searchButton.clicked.connect(self.search_pv)
         self.plotButton.clicked.connect(self.plot)
+        self.progressBarPlot.setMinimum(0)
+        self.progressBarPlot.setValue(0)
 
         self.iniDatetime = None
         self.endDatetime = None
@@ -38,6 +40,7 @@ class ConcreteAnalytics(QMainWindow):
         self.menuSensors.show()
 
     def plot(self, x: list = [], y: list = []):
+        self.progressBarPlot.setValue(0)
         x = self.selectPvs.xData.copy()
         y = self.selectPvs.yData.copy()
         pvs = self.selectPvs.pvs.copy()
@@ -48,21 +51,27 @@ class ConcreteAnalytics(QMainWindow):
             self.endDatetime = self.form_endDatetime.dateTime().toPyDateTime()
 
         if self.cb_addTempAverage.isChecked():
+            self.log_insertMsg("Generating temperature average, this might take a few minutes...")
             if (self.x_tempAvg == [] or self.y_tempAvg == [] or self.rangeDate_tempAvg == []):
                 if self.rangeDate_tempAvg != [self.iniDatetime, self.endDatetime]:
-                    self.log_insertMsg("Generating temperature average, this might take a few minutes...")
-                    self.x_tempAvg, self.y_tempAvg = anls.temperatureAvg(self.iniDatetime, self.endDatetime)
+                    self.x_tempAvg, self.y_tempAvg, unit_tempAvg = anls.temperatureAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, arc.get_concrete_pvName("TU*Temp"))
                     self.rangeDate_tempAvg = [self.iniDatetime, self.endDatetime]
             unit_tempAvg = ["C" for _ in range(len(self.x_tempAvg))]
             x.append(self.x_tempAvg)
             y.append(self.y_tempAvg)
             units.append(unit_tempAvg)
             pvs.append("Concrete Temperature Average")
-        else:
-            self.log_insertMsg("Nothing to plot...")
 
         if (x != [] and y != [] and pvs != [] and units != []):
-            self.matplotlibWidget.plot(x, y,labels=pvs, units=units, 
+
+            if self.cb_average.isChecked():
+                x_avg, y_avg, units_avg = anls.temperatureAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, pvs)
+                x.append(x_avg)
+                y.append(y_avg)
+                units.append(["C" for _ in range(len(x_avg))])
+                pvs.append("Data Average")
+
+            self.matplotlibWidget.plot(x, y, labels=pvs, units=units, 
                 diff = self.cb_setDiff.isChecked(), 
                 removeOutliers = self.cb_removeOutliers.isChecked(), 
                 continuity = self.cb_forceContinuity.isChecked(),
