@@ -113,7 +113,10 @@ class MatplotlibWidget(QtWidgets.QWidget):
                     y_max = max(self.graphs[key].get_ydata())
                 if y_min > min(self.graphs[key].get_ydata()):
                     y_min = min(self.graphs[key].get_ydata())
-        self.canvas.axes.set_ylim([y_min*1.1, y_max*1.1])
+        if(abs(y_min*1.1 - y_min) > abs(y_max*1.1 - y_max)):
+            self.canvas.axes.set_ylim([y_min*1.1, y_max + abs(y_min*1.1 - y_min)])
+        else:
+            self.canvas.axes.set_ylim([y_min*1.1 - abs(y_max*1.1 - y_max), y_max*1.1])
         self.canvas.draw()
         
         

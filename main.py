@@ -45,6 +45,7 @@ class ConcreteAnalytics(QMainWindow):
         y = self.selectPvs.yData.copy()
         pvs = self.selectPvs.pvs.copy()
         units = self.selectPvs.units.copy()
+        labels = pvs.copy()
 
         if self.iniDatetime == None or self.endDatetime == None:
             self.iniDatetime = self.form_iniDatetime.dateTime().toPyDateTime()
@@ -54,24 +55,24 @@ class ConcreteAnalytics(QMainWindow):
             self.log_insertMsg("Generating temperature average, this might take a few minutes...")
             if (self.x_tempAvg == [] or self.y_tempAvg == [] or self.rangeDate_tempAvg == []):
                 if self.rangeDate_tempAvg != [self.iniDatetime, self.endDatetime]:
-                    self.x_tempAvg, self.y_tempAvg, unit_tempAvg = anls.temperatureAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, arc.get_concrete_pvName("TU*Temp"))
+                    self.x_tempAvg, self.y_tempAvg, unit_tempAvg = anls.dataAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, arc.get_concrete_pvName("TU*Temp"))
                     self.rangeDate_tempAvg = [self.iniDatetime, self.endDatetime]
             unit_tempAvg = ["C" for _ in range(len(self.x_tempAvg))]
             x.append(self.x_tempAvg)
             y.append(self.y_tempAvg)
             units.append(unit_tempAvg)
-            pvs.append("Concrete Temperature Average")
+            labels.append("Concrete Temperature Average")
 
-        if (x != [] and y != [] and pvs != [] and units != []):
+        if (x != [] and y != [] and labels != [] and units != []):
 
             if self.cb_average.isChecked():
-                x_avg, y_avg, units_avg = anls.temperatureAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, pvs)
+                x_avg, y_avg, units_avg = anls.dataAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, pvs)
                 x.append(x_avg)
                 y.append(y_avg)
                 units.append(["C" for _ in range(len(x_avg))])
-                pvs.append("Data Average")
+                labels.append("Data Average")
 
-            self.matplotlibWidget.plot(x, y, labels=pvs, units=units, 
+            self.matplotlibWidget.plot(x, y, labels=labels, units=units, 
                 diff = self.cb_setDiff.isChecked(), 
                 removeOutliers = self.cb_removeOutliers.isChecked(), 
                 continuity = self.cb_forceContinuity.isChecked(),

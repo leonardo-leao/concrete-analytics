@@ -16,19 +16,22 @@ class Archiver():
             "to": f"{date_to}"
         }
 
-        response = requests.get("http://10.0.38.42/retrieval/data/getData.json", params=query)
-        json = response.json()
-        meta = json[0]['meta']
-        data = json[0]['data']
-        
-        # Separate data
-        dt = []
-        values = []
+        try:
+            response = requests.get("http://10.0.38.42/retrieval/data/getData.json", params=query)
+            json = response.json()
+            meta = json[0]['meta']
+            data = json[0]['data']
+            
+            # Separate data
+            dt = []
+            values = []
 
-        for i in range(len(data)):
-            date = datetime.fromtimestamp(data[i]['secs'])
-            dt.append(date)
-            values.append(data[i]['val'])
+            for i in range(len(data)):
+                date = datetime.fromtimestamp(data[i]['secs'])
+                dt.append(date)
+                values.append(data[i]['val'])
+        except:
+            print("Erro ao requisitar os seguintes parâmetros:", query)
             
         return (dt, values, meta['EGU'])
 
