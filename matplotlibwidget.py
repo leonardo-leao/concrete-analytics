@@ -25,9 +25,17 @@ class MatplotlibWidget(QtWidgets.QWidget):
                                    QtWidgets.QSizePolicy.Expanding,
                                    QtWidgets.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
+
+        self.secondAxe = None
         
         vertical_layout = QtWidgets.QVBoxLayout()
         vertical_layout.addWidget(self.canvas)
+
+        self.colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', 
+                       '#17becf', '#E52B50', '#FFBF00', '#9966CC', '#0000FF', '#7FFF00', '#FF7F50', '#FFD700', '#BEBEBE', 
+                       '#3FFF00', '#4B0082', '#FF00FF', '#FF4500', '#0F52BA', '#FF2400', '#00FF7F', '#D2B48C', '#92000A', 
+                       '#808000', '#C8A2C8', '#29AB87', '#0047AB', '#8A2BE2', '#6F4E37', '#841B2D', '#8DB600', '#000000',
+                       '#1B4D3E', '#CC5500', '#91A3B0', '#B2FFFF']
         
         self.canvas.axes = self.canvas.figure.add_subplot(111)
         self.canvas.axes.ticklabel_format(axis="y", style="sci", scilimits=(-3, 3))
@@ -75,8 +83,22 @@ class MatplotlibWidget(QtWidgets.QWidget):
         self.graphs = {}
         if len(x) == len(y):
             self.canvas.axes.cla()
+            if self.secondAxe != None:
+                self.secondAxe.remove()
             if x_isDate == True:
                 self.x_axes_set_date(x)
+
+            # Caso exista mais um tipo de unidade nos dados
+            firstUnit = units[0]
+            for i in range(1, len(units)):
+                if firstUnit != units[i]:
+                    self.secondAxe = self.canvas.axes.twinx()
+                    ylabel = r"$^oC$" if units[i] == "C" else r"$\mu\epsilon$"
+                    self.secondAxe.set_ylabel(ylabel)
+                    break
+            
+            ylabel = r"$^oC$" if firstUnit == "C" else r"$\mu\epsilon$"
+            self.canvas.axes.set_ylabel(ylabel)
 
             lines = []
             for i in range(len(x)):
@@ -87,16 +109,20 @@ class MatplotlibWidget(QtWidgets.QWidget):
                 if continuity == True:
                     x[i], y[i] = self.continuity(x[i], y[i])
                 label = f"Linha {i}" if labels == [] else labels[i]
-                line = self.canvas.axes.plot(x[i], y[i], label=label)
-                lines.append(line)
+                if units[i] == firstUnit:
+                    line = self.canvas.axes.plot(x[i], y[i], label=label, color=self.colors[i])
+                else:
+                    line = self.secondAxe.plot(x[i], y[i], label=label, color=self.colors[i])
+                lines.append(line[0])
 
-            legend = self.canvas.axes.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=4)
+            labs = [l.get_label() for l in lines]
+            legend = self.canvas.axes.legend(lines, labs, bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left",
+                                             mode="expand", borderaxespad=0, ncol=4)
             lines_legend = legend.get_lines()
             for i in range(len(lines_legend)):
                 lines_legend[i].set_picker(True)
                 lines_legend[i].set_pickradius(5)
-                self.graphs[lines_legend[i]] = lines[i][0]
+                self.graphs[lines_legend[i]] = lines[i]
 
             self.canvas.figure.canvas.mpl_connect("pick_event", self.on_pick)
             self.canvas.draw()
@@ -107,20 +133,24 @@ class MatplotlibWidget(QtWidgets.QWidget):
         self.graphs[legend].set_visible(not isVisible)
         legend.set_visible(not isVisible)
         y_max, y_min = 0, 0
+
+        op = "Strain" if "Strain" in self.graphs[legend].get_label() else "Temp"
         for key in self.graphs.keys():
-            if self.graphs[key].get_visible():
+            if self.graphs[key].get_visible() and op in self.graphs[key].get_label():
                 if y_max < max(self.graphs[key].get_ydata()):
                     y_max = max(self.graphs[key].get_ydata())
                 if y_min > min(self.graphs[key].get_ydata()):
                     y_min = min(self.graphs[key].get_ydata())
-        if(abs(y_min*1.1 - y_min) > abs(y_max*1.1 - y_max)):
-            self.canvas.axes.set_ylim([y_min*1.1, y_max + abs(y_min*1.1 - y_min)])
+
+        op = "epsilon" if "Strain" in op else "C"
+        if op in self.canvas.axes.get_ylabel():
+            edit = self.canvas.axes
         else:
-            self.canvas.axes.set_ylim([y_min*1.1 - abs(y_max*1.1 - y_max), y_max*1.1])
+            edit = self.secondAxe
+
+        if(abs(y_min*1.1 - y_min) > abs(y_max*1.1 - y_max)):
+            edit.set_ylim([y_min*1.1, y_max + abs(y_min*1.1 - y_min)])
+        else:
+            edit.set_ylim([y_min*1.1 - abs(y_max*1.1 - y_max), y_max*1.1])
+
         self.canvas.draw()
-        
-        
-        #self.canvas.axes.clear()
-        #for i in range(len(x)):
-        #    self.canvas.axes.plot(x[i], y[i])
-        #self.canvas.draw()
