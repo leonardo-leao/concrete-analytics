@@ -119,14 +119,4 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     x,y,u=Analysis.dataAvg(ini, end, ["TU-03S:SS-Concrete-7AN:Temp-Mon", "TU-03S:SS-Concrete-9AN:Temp-Mon"])
     plt.plot(x, y)
-    plt.show() 
-         
-         
-         
-         
-         
-         
-         
-         
-         
-        
+    plt.show()
