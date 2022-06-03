@@ -84,7 +84,10 @@ class MatplotlibWidget(QtWidgets.QWidget):
         if len(x) == len(y):
             self.canvas.axes.cla()
             if self.secondAxe != None:
-                self.secondAxe.remove()
+                try:
+                    self.secondAxe.remove()
+                except:
+                    print("O segundo eixo não existe")
             if x_isDate == True:
                 self.x_axes_set_date(x)
 
@@ -92,6 +95,7 @@ class MatplotlibWidget(QtWidgets.QWidget):
             firstUnit = units[0]
             for i in range(1, len(units)):
                 if firstUnit != units[i]:
+                    print(firstUnit, units[i])
                     self.secondAxe = self.canvas.axes.twinx()
                     ylabel = r"$^oC$" if units[i] == "C" else r"$\mu\epsilon$"
                     self.secondAxe.set_ylabel(ylabel)

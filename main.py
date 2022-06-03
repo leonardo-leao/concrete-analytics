@@ -59,7 +59,7 @@ class ConcreteAnalytics(QMainWindow):
                     self.rangeDate_tempAvg = [self.iniDatetime, self.endDatetime]
             x.append(self.x_tempAvg)
             y.append(self.y_tempAvg)
-            units.append([unit_tempAvg for _ in range(len(self.x_tempAvg))])
+            units.append(unit_tempAvg)
             labels.append("Concrete Temperature Average")
 
         if (x != [] and y != [] and labels != [] and units != []):
@@ -68,7 +68,7 @@ class ConcreteAnalytics(QMainWindow):
                 x_avg, y_avg, units_avg = anls.dataAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, pvs)
                 x.append(x_avg)
                 y.append(y_avg)
-                units.append([units_avg for _ in range(len(x_avg))])
+                units.append(units_avg)
                 labels.append("Data Average")
 
             self.matplotlibWidget.plot(x, y, labels=labels, units=units, 

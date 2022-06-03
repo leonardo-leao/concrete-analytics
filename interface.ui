@@ -456,7 +456,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>TU*03</string>
+      <string>TU*08*N*Temp</string>
      </property>
      <property name="placeholderText">
       <string>PV name</string>
@@ -564,8 +564,8 @@
        <minute>0</minute>
        <second>0</second>
        <year>2022</year>
-       <month>5</month>
-       <day>25</day>
+       <month>6</month>
+       <day>1</day>
       </datetime>
      </property>
      <property name="calendarPopup">
@@ -623,6 +623,9 @@
      <property name="text">
       <string>Set diff</string>
      </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
     <widget class="QCheckBox" name="cb_forceContinuity">
      <property name="geometry">
@@ -635,6 +638,9 @@
      </property>
      <property name="text">
       <string>Force continuity</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QPushButton" name="plotButton">

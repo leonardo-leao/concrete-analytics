@@ -34,7 +34,7 @@ class SelectPvs(QMainWindow):
         for i in reversed(range(layout.count())): 
             layout.itemAt(i).widget().setParent(None)
         for i in range(len(pvs)):
-            layout.addWidget(QCheckBox(pvs[i]))
+            layout.addWidget(QCheckBox(pvs[i], checked=(pvs[i] in self.pvs)))
         layout.setAlignment(Qt.AlignTop)
 
     def selectAllPvs(self, op: bool):
