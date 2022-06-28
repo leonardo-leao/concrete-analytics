@@ -9,3 +9,8 @@ class Mapa(QMainWindow):
         QMainWindow.__init__(self)
         loadUi("mapa.ui", self)
         self.setWindowTitle("Sensors Map")
+
+app = QApplication([])
+window = Mapa()
+window.show()
+app.exec_()

@@ -45,10 +45,12 @@ class MatplotlibWidget(QtWidgets.QWidget):
         self.canvas.axes.xaxis.set_major_formatter(mdates.DateFormatter('%b-%d, %Y'))
         if type(x[0]) not in [int, float]:
             step = (x[0][-1] - x[0][0])/split
-            self.canvas.axes.xaxis.set_ticks(np.arange(x[0][0], x[0][-1], timedelta(days=step.days, seconds=step.seconds, microseconds=step.microseconds)))
+            deltat = timedelta(days=step.days, seconds=step.seconds, microseconds=step.microseconds)
+            self.canvas.axes.xaxis.set_ticks(np.arange(x[0][0], x[0][-1] + deltat, deltat))
         else:
             step = (x[-1] - x[0])/split
-            self.canvas.axes.xaxis.set_ticks(np.arange(x[0], x[-1], timedelta(days=step.days, seconds=step.seconds, microseconds=step.microseconds)))
+            deltat = timedelta(days=step.days, seconds=step.seconds, microseconds=step.microseconds)
+            self.canvas.axes.xaxis.set_ticks(np.arange(x[0][0], x[0][-1] + deltat, deltat))
 
     def diff(self, y: list) -> list:
         y = np.array(y)
@@ -95,13 +97,18 @@ class MatplotlibWidget(QtWidgets.QWidget):
             firstUnit = units[0]
             for i in range(1, len(units)):
                 if firstUnit != units[i]:
-                    print(firstUnit, units[i])
                     self.secondAxe = self.canvas.axes.twinx()
-                    ylabel = r"$^oC$" if units[i] == "C" else r"$\mu\epsilon$"
+                    if diff:
+                        ylabel = r"$\Delta^oC$" if units[i] == "C" else r"$\Delta\mu\epsilon$" if units[i] == "uE" else r"$\Delta Hz$"
+                    else:
+                        ylabel = r"$^oC$" if units[i] == "C" else r"$\mu\epsilon$" if units[i] == "uE" else r"$Hz$"
                     self.secondAxe.set_ylabel(ylabel)
                     break
             
-            ylabel = r"$^oC$" if firstUnit == "C" else r"$\mu\epsilon$"
+            if diff:
+                ylabel = r"$\Delta^oC$" if firstUnit == "C" else r"$\Delta\mu\epsilon$" if firstUnit == "uE" else r"$\Delta Hz$"
+            else:
+                ylabel = r"$^oC$" if firstUnit == "C" else r"$\mu\epsilon$" if firstUnit == "uE" else r"$Hz$"
             self.canvas.axes.set_ylabel(ylabel)
 
             lines = []
@@ -115,8 +122,10 @@ class MatplotlibWidget(QtWidgets.QWidget):
                 label = f"Linha {i}" if labels == [] else labels[i]
                 if units[i] == firstUnit:
                     line = self.canvas.axes.plot(x[i], y[i], label=label, color=self.colors[i])
+                    self.canvas.axes.grid(True, axis="x", linestyle="--")
                 else:
                     line = self.secondAxe.plot(x[i], y[i], label=label, color=self.colors[i])
+                    self.canvas.axes.grid(True, axis="x", linestyle="--")
                 lines.append(line[0])
 
             labs = [l.get_label() for l in lines]
@@ -138,7 +147,7 @@ class MatplotlibWidget(QtWidgets.QWidget):
         legend.set_visible(not isVisible)
         y_max, y_min = 0, 0
 
-        op = "Strain" if "Strain" in self.graphs[legend].get_label() else "Temp"
+        op = "Strain" if "Strain" in self.graphs[legend].get_label() else "Temp" if "Temp" in self.graphs[legend].get_label() else "Radio"
         for key in self.graphs.keys():
             if self.graphs[key].get_visible() and op in self.graphs[key].get_label():
                 if y_max < max(self.graphs[key].get_ydata()):
@@ -146,7 +155,7 @@ class MatplotlibWidget(QtWidgets.QWidget):
                 if y_min > min(self.graphs[key].get_ydata()):
                     y_min = min(self.graphs[key].get_ydata())
 
-        op = "epsilon" if "Strain" in op else "C"
+        op = "epsilon" if "Strain" in op else "C" if "Temp" in self.graphs[legend].get_label() else "Hz"
         if op in self.canvas.axes.get_ylabel():
             edit = self.canvas.axes
         else:

@@ -51,15 +51,23 @@ class ConcreteAnalytics(QMainWindow):
             self.iniDatetime = self.form_iniDatetime.dateTime().toPyDateTime()
             self.endDatetime = self.form_endDatetime.dateTime().toPyDateTime()
 
+        if self.cb_rfCorrelation.isChecked():
+            self.log_insertMsg("Getting RF Data...")
+            self.x_rf, self.y_rf, unit_rf = arc.pv_request("RF-Gen:GeneralFreq-RB", arc.datetimeToStr(self.iniDatetime), arc.datetimeToStr(self.endDatetime)) 
+            x.append(self.x_rf)
+            y.append(self.y_rf)
+            units.append(unit_rf)
+            labels.append("Radio Frequency")
+
         if self.cb_addTempAverage.isChecked():
             self.log_insertMsg("Generating temperature average, this might take a few minutes...")
             if (self.x_tempAvg == [] or self.y_tempAvg == [] or self.rangeDate_tempAvg == []):
                 if self.rangeDate_tempAvg != [self.iniDatetime, self.endDatetime]:
-                    self.x_tempAvg, self.y_tempAvg, unit_tempAvg = anls.dataAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, arc.get_concrete_pvName("TU*Temp"))
+                    self.x_tempAvg, self.y_tempAvg, _ = anls.dataAvg(self.progressBarPlot, 0.9, self.iniDatetime, self.endDatetime, arc.get_concrete_pvName("TU*Temp"))
                     self.rangeDate_tempAvg = [self.iniDatetime, self.endDatetime]
             x.append(self.x_tempAvg)
             y.append(self.y_tempAvg)
-            units.append(unit_tempAvg)
+            units.append("C")
             labels.append("Concrete Temperature Average")
 
         if (x != [] and y != [] and labels != [] and units != []):

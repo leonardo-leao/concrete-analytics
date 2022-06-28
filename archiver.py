@@ -1,3 +1,4 @@
+from os import stat
 import requests
 from datetime import datetime
 
@@ -10,11 +11,14 @@ class Archiver():
     @staticmethod
     def pv_request(pv, date_from, date_to):
     
-        query = {
-            "pv": f"{pv}",
-            "from": f"{date_from}",
-            "to": f"{date_to}"
-        }
+        if date_from != None and date_to != None:
+            query = {
+                "pv": f"{pv}",
+                "from": f"{date_from}",
+                "to": f"{date_to}"
+            }
+        else:
+            query = {"pv": f"{pv}"}
 
         try:
             response = requests.get("http://10.0.38.42/retrieval/data/getData.json", params=query)
@@ -30,16 +34,17 @@ class Archiver():
                 date = datetime.fromtimestamp(data[i]['secs'])
                 dt.append(date)
                 values.append(data[i]['val'])
+            return (dt, values, meta['EGU'])
         except:
             print("Erro ao requisitar os seguintes parâmetros:", query)
-            
-        return (dt, values, meta['EGU'])
+            return (None, None, None)
+        
 
     @staticmethod
     def generate_concrete_pvs():
         onlyTemp = [4, 9, 14, 19]
         complete = [5, 10, 15, 20]
-        simple = [2, 3, 6, 7, 8, 11, 12, 13, 16, 17, 18]
+        simple = [1, 2, 3, 6, 7, 8, 11, 12, 13, 16, 17, 18]
 
         pvs = []
         for i in range(1, 21):
@@ -90,5 +95,6 @@ class Archiver():
                     
 if __name__ == "__main__":
     from archiver import Archiver as arc
-    pvs = arc.get_concrete_pvName("TU*Temp")
+    pvs = arc.get_concrete_pvName("TU*02S")
     print(pvs)
+    print(arc.pv_request("TU-01S:SS-Concrete-7AN:Temp-Mon", 0, 0))

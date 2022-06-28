@@ -1,4 +1,4 @@
-from audioop import minmax
+import statsmodels.api as sm
 import numpy as np
 from scipy import signal
 from archiver import Archiver as arc
@@ -71,24 +71,27 @@ class Analysis():
     @staticmethod
     def dataAvg(progressBar, percentagePB, ini, end, pvs):
 
-        progressBar.setMaximum(len(pvs))
-        progressBar.setValue(0)
+        if progressBar != None:
+            progressBar.setMaximum(len(pvs))
+            progressBar.setValue(0)
 
         signals = []; maxDatetimes = []; minDatetimes = []
         for i in range(len(pvs)):
             if pvs[i] not in Analysis.ignore:
                 data = {}
                 x, y, units = arc.pv_request(pvs[i], arc.datetimeToStr(ini), arc.datetimeToStr(end))
-                x, y = Analysis.increaseResolution(x, y)
-                for j in range(len(x)):
-                    x[j] = Analysis.changeDatetime(x[j])
-                    if x[j] not in data.keys():
-                        data[x[j]] = [y[j]-y[0]]
-                    else:
-                        data[x[j]].append(y[j]-y[0])
-                minDatetimes.append(x[0]); maxDatetimes.append(x[-1])
-                signals.append(data)
-            progressBar.setValue(i)
+                if x != None and y != None:
+                    x, y = Analysis.increaseResolution(x, y)
+                    for j in range(len(x)):
+                        x[j] = Analysis.changeDatetime(x[j])
+                        if x[j] not in data.keys():
+                            data[x[j]] = [y[j]-y[0]]
+                        else:
+                            data[x[j]].append(y[j]-y[0])
+                    minDatetimes.append(x[0]); maxDatetimes.append(x[-1])
+                    signals.append(data)
+            if progressBar != None:
+                progressBar.setValue(i)
 
         maxMinKey = max(minDatetimes)
         minMaxKey = min(maxDatetimes)
@@ -110,8 +113,85 @@ class Analysis():
                 y.append(avg/cont)
                 x.append(keys[j])
 
-        progressBar.setValue(len(pvs))        
+        if progressBar != None:
+            progressBar.setValue(len(pvs))
+            
+        print(units)
         return (x, y, units)
+
+    @staticmethod
+    def dataToDict(ini, end, dt, values):
+        # Initializing the dictionary
+        data = {}
+        while ini <= end:
+            data[ini] = []
+            ini = ini + timedelta(minutes = 30)
+
+        # Adding data to dictionary
+        for i in range(len(dt)):
+            for j in range(len(dt[i])):
+                new_dt = Analysis.changeDatetime(dt[i][j])
+                try:
+                    """
+                        The stored data is the temperature variation in
+                        relation to the previous data
+                    """
+                    last = (j-1) if j > 0 else 0
+                    data[new_dt].append(values[i][last] - values[i][j])
+                except:
+                    # The datetime is not in the range
+                    pass
+        return data
+        
+    @staticmethod
+    def dictAvg(dictionary):
+        for key in dictionary.keys():
+            if len(dictionary[key]) > 0:
+                dictionary[key] = sum(dictionary[key])/len(dictionary[key])
+            else:
+                dictionary[key] = None
+        return dictionary
+
+    @staticmethod
+    def compressData(ini, dt, values):
+        new_datetime = []
+        new_values = []
+        average = []
+        i = 0
+        
+        while dt[i] <= ini:
+            i += 1
+        
+        while i < len(dt):
+            if(ini - timedelta(minutes = 15) <= dt[i] <= (ini + timedelta(minutes = 15))):
+                average.append(values[i])
+                i = i + 1
+            else:
+                new_datetime.append(ini)
+                ini = ini + timedelta(minutes = 30)
+                if len(average) > 0:
+                    new_values.append(sum(average)/len(average))
+                    average = []
+                else:
+                    new_values.append(values[i])
+        
+        return (new_datetime, new_values)
+
+    @staticmethod
+    def crossCorrelation(ini, dt_rf, rf, perimeter):
+
+        dt_rf, rf = Analysis.compressData(ini, dt_rf, rf)
+
+        #calculate cross correlation
+        x = sm.tsa.stattools.ccf(rf, perimeter, adjusted=False)
+
+        #calculate the time necessary to the best correlation
+        units_to_best = np.where(x == max(x))[0][0]
+        time_to_best = dt_rf[units_to_best] - dt_rf[0]
+
+        ccf = (max(x)+1)*100/2
+
+        return (time_to_best, ccf)
 
 if __name__ == "__main__":
     ini = datetime(year = 2022, month = 3, day = 5)
